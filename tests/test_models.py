@@ -196,13 +196,12 @@ class TestProductModel(unittest.TestCase):
             product.create()
         price0 = products[0].price
         price0_count = len([product for product in products if product.price == price0])
-        products_with_price0= Product.find_by_price(price0)
+        products_with_price0 = Product.find_by_price(price0)
         self.assertEqual(products_with_price0.count(), price0_count)
         for product in products_with_price0:
             self.assertEqual(product.price, price0)
         # search with string format
-        products_with_price0= Product.find_by_price(str(price0))
+        products_with_price0 = Product.find_by_price(str(price0))
         self.assertEqual(products_with_price0.count(), price0_count)
         for product in products_with_price0:
             self.assertEqual(product.price, price0)
-        
