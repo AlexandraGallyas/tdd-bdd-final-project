@@ -114,7 +114,7 @@ def get_product(product_id):
     This endpoint will return a Product based on its id
     """
 
-    app.logger.info("Request to Retrieve a product with id [%s]", product_id)
+    app.logger.info(f"Request to Retrieve a product with id {product_id}")
 
     found_product = Product.find(product_id)
     if not found_product:
@@ -129,7 +129,22 @@ def get_product(product_id):
 ######################################################################
 
 #
-# PLACE YOUR CODE TO UPDATE A PRODUCT HERE
+@app.route("/products/<product_id>", methods=["PUT"])
+def update_product(product_id):
+    """Update a Product
+    This endpoint will update a Product based on the body that is posted
+    """
+
+    app.logger.info(f"Request to Update a product with id {product_id}")
+    check_content_type("application/json")
+    product = Product.find(product_id)
+    if not product:
+        abort(status.HTTP_404_NOT_FOUND, f"Product with id {product_id} was not found")
+    product.deserialize(request.get_json())
+    product.id = product_id
+    product.update()
+    return product.serialize(), status.HTTP_200_OK
+
 #
 
 ######################################################################
@@ -138,5 +153,18 @@ def get_product(product_id):
 
 
 #
-# PLACE YOUR CODE TO DELETE A PRODUCT HERE
+@app.route("/products/<int:product_id>", methods=['DELETE'])
+def delete_product(product_id):
+    """
+    Delete a Product
+
+    This endpoint will delete a Product based on the id specified in the path
+    """
+    app.logger.info("Request to Delete a product with id {product_id}")
+
+    product = Product.find(product_id)
+    if not product:
+        abort(status.HTTP_404_NOT_FOUND, f"Product with id {product_id} was not found")
+    product.delete()
+    return "", status.HTTP_204_NO_CONTENT
 #
