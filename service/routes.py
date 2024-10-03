@@ -23,7 +23,7 @@ from flask import url_for  # noqa: F401 pylint: disable=unused-import
 from service.models import Product
 from service.common import status  # HTTP Status Codes
 from . import app
-
+from service.models import Product, Category
 
 ######################################################################
 # H E A L T H   C H E C K
@@ -95,11 +95,31 @@ def create_products():
 
 
 ######################################################################
-# L I S T   A L L   P R O D U C T S
+# L I S T   P R O D U C T S
 ######################################################################
 
 #
-# PLACE YOUR CODE TO LIST ALL PRODUCTS HERE
+@app.route("/products", methods=["GET"])
+def get_product_list():
+    """Retrieve a list of Products"""
+    app.logger.info(f"Request to list Products...")
+    
+    products = []
+    query_name = request.args.get("name")
+    query_category = request.args.get("category")
+    if query_name:
+        app.logger.info(f"Find by name: {query_name}")
+        products = Product.find_by_name(query_name)
+    elif query_category:
+        app.logger.info(f"Find by category: {query_category}")
+        category_uppercase = getattr(Category, query_category.upper())
+        products = Product.find_by_category(category_uppercase)
+    else:
+        app.logger.info("Find all")
+        products = Product.all()
+    product_list = [product.serialize() for product in products]
+    app.logger.info(f"Returning {len(product_list)} products")
+    return product_list, status.HTTP_200_OK
 #
 
 ######################################################################
@@ -168,3 +188,4 @@ def delete_product(product_id):
     product.delete()
     return "", status.HTTP_204_NO_CONTENT
 #
+

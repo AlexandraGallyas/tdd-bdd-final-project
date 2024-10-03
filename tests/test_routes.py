@@ -32,6 +32,7 @@ from service import app
 from service.common import status
 from service.models import db, init_db, Product
 from tests.factories import ProductFactory
+from urllib.parse import quote_plus
 
 # Disable all but critical errors during normal test run
 # uncomment for debugging failing tests
@@ -206,6 +207,39 @@ class TestProductRoutes(TestCase):
         new_count = self.get_product_count()
         self.assertEqual(new_count, prod_count-1)
 
+    def test_create_product_list(self):
+        """It should Get a list of Products"""
+        self._create_products(5)
+        response = self.client.get(BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), 5)
+
+    def test_list_by_name(self):
+        """It should Query Products by Name"""
+        products = self._create_products(5)
+        query_name = products[0].name
+        name_count = len([product for product in products if product.name == query_name])
+        response = self.client.get(BASE_URL, query_string=f"name={quote_plus(query_name)}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(name_count, len(data))
+        for product in data:
+            self.assertEqual(product["name"], query_name)
+    #
+
+    def test_query_by_category(self):
+        """It should Query Products by Category"""
+        products = self._create_products(10)
+        query_category = products[0].category
+        category_count = len([product for product in products if product.category == query_category])
+        # logging.debug(f"Found {category_count} products")
+        response = self.client.get(BASE_URL, query_string=f"category={query_category.name}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(category_count, len(data))
+        for product in data:
+            self.assertEqual(product["category"], query_category.name)
     #
 
     ######################################################################
@@ -217,5 +251,5 @@ class TestProductRoutes(TestCase):
         response = self.client.get(BASE_URL)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
-        # logging.debug("data = %s", data)
+        logging.debug("data = %s", data)
         return len(data)
