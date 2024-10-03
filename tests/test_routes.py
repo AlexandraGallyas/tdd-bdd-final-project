@@ -28,11 +28,11 @@ import os
 import logging
 from decimal import Decimal
 from unittest import TestCase
+from urllib.parse import quote_plus
 from service import app
 from service.common import status
 from service.models import db, init_db, Product
 from tests.factories import ProductFactory
-from urllib.parse import quote_plus
 
 # Disable all but critical errors during normal test run
 # uncomment for debugging failing tests
@@ -164,7 +164,6 @@ class TestProductRoutes(TestCase):
         response = self.client.post(BASE_URL, data={}, content_type="plain/text")
         self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
-    #
     # ADD YOUR TEST CASES HERE
     def test_get_product(self):
         """It should Get a Product"""
@@ -226,7 +225,6 @@ class TestProductRoutes(TestCase):
         self.assertEqual(name_count, len(data))
         for product in data:
             self.assertEqual(product["name"], query_name)
-    #
 
     def test_query_by_category(self):
         """It should Query Products by Category"""
@@ -240,7 +238,18 @@ class TestProductRoutes(TestCase):
         self.assertEqual(category_count, len(data))
         for product in data:
             self.assertEqual(product["category"], query_category.name)
-    #
+
+    def test_query_by_availability(self):
+        """It should Query Products by Availability"""
+        products = self._create_products(10)
+        available_count = len([product for product in products if product.available is True])
+        logging.debug("Found %d Products", available_count)
+        response = self.client.get(BASE_URL, query_string="available=True")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(available_count, len(data))
+        for product in data:
+            self.assertTrue(product["available"])
 
     ######################################################################
     # Utility functions
